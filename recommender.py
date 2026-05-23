@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 import ast
-from transformers import pipeline
+from sklearn.metrics.pairwise import cosine_similarity
 
 print("Hello World")
 
@@ -23,7 +23,6 @@ class MovieRecommender:
     def __init__(self):
         self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
         #parameters I declare
-        self.classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
         self.tmdb = None
         self.embeddings = None
         self.knn = None
@@ -93,8 +92,11 @@ class MovieRecommender:
             "Punk Sci-Fi": ["Science Fiction"],
             "Speculative Sci-Fi": ["Science Fiction"],
         }
-        mood_result = self.classifier(user_prompt, candidate_labels=list(mood_map.keys()))
-        top_mood = mood_result['labels'][0]
+        mood_keys = list(mood_map.keys())
+        mood_vectors = self.encoder.encode(mood_keys)
+        similarities = cosine_similarity(user_vector, mood_vectors)[0]
+        best_match_idx = np.argmax(similarities)
+        top_mood = mood_keys[best_match_idx]
         target_genres = mood_map[top_mood]
         results = []
         threshold = 0.8

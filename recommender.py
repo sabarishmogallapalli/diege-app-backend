@@ -1,5 +1,5 @@
 import os
-# Throttle PyTorch to prevent RAM spikes
+# 1. Throttle PyTorch to prevent RAM spikes on the Render Free Tier
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
 
@@ -14,20 +14,20 @@ from sklearn.neighbors import NearestNeighbors
 class MovieRecommender:
     def __init__(self):
         print("Diege is waking up...")
-        # 1. Load the lightweight model ONLY for reading the user's live text prompt
+        # Load the lightweight model ONLY for reading the user's live text prompt
         self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
-        
+
     def load_data(self, csv_path):
         print("Loading movie metadata...")
-        # 2. Load the movie dataset strictly to retrieve titles and IDs
+        # Load the movie dataset strictly to retrieve titles and IDs
         self.df = pd.read_csv(csv_path)
         self.df = self.df[['id', 'title', 'overview', 'genres', 'keywords', 'tagline']].fillna('')
 
-        # 3. Load the pre-calculated math instantly (No json cleaning needed!)
+        # 2. THE SILVER BULLET: Load the pre-calculated math instantly
         print("Loading baked brain matrix...")
         self.embeddings = np.load('movie_embeddings.npy')
 
-        # 4. Spin up the nearest neighbors matcher
+        # Spin up the nearest neighbors matcher
         self.knn = NearestNeighbors(n_neighbors=6, metric='cosine')
         self.knn.fit(self.embeddings)
         print("Brain is ready.")
@@ -54,5 +54,5 @@ class MovieRecommender:
             
         return results
 
-# Initialize the global instance
+# Initialize the global instance so main.py can trigger it
 recommender = MovieRecommender()

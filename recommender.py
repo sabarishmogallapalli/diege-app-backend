@@ -12,27 +12,17 @@ from sklearn.neighbors import NearestNeighbors
 import ast
 from sklearn.metrics.pairwise import cosine_similarity
 
-print("Hello World")
-
-
-def clean_json_list(json_str):
-        if not json_str or json_str == '[]':
-            return ""
-        try:
-            # Converts string '[{"name": "Action"}]' to list and extracts names
-            data = ast.literal_eval(json_str)
-            return " ".join([i['name'] for i in data])
-        except:
-            return ""
-
 class MovieRecommender:
 
     def __init__(self):
         self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
+        self.df = pd.read_csv('TMDB 5000 Movies.csv')
         #parameters I declare
         self.tmdb = None
-        self.embeddings = None
-        self.knn = None
+        self.embeddings = np.load('movie_embeddings.npy')
+        self.knn = NearestNeighbors(n_neighbors=6, metric='cosine')
+        self.knn.fit(self.embeddings)
+        print("Brain is ready.")
         
     def get_vibe_match(self, user_prompt):
         if len(user_prompt) < 4:
@@ -142,8 +132,8 @@ class MovieRecommender:
             self.df['tagline'] *2
         ).str.lower()
 
-        print("encoding the Movie Vibes")
-        self.embeddings = self.encoder.encode(self.df['vibe_features'].tolist(), show_progress_bar=True)
+        #print("encoding the Movie Vibes")
+        #self.embeddings = self.encoder.encode(self.df['vibe_features'].tolist(), show_progress_bar=True)
         self.knn = NearestNeighbors(n_neighbors=6, metric='cosine')
         self.knn.fit(self.embeddings)
         self.df['genres'] = self.df['genres'].apply(clean_json_list)

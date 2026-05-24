@@ -24,30 +24,30 @@ class MovieRecommender:
         self.knn.fit(self.embeddings)
         print("Brain is ready.")
     
-    def load_data(self, csv_path):
-        self.df = pd.read_csv(csv_path)
-        self.df = self.df[['id', 'title', 'overview', 'genres', 'keywords', 'tagline']].fillna('')
+    # def load_data(self, csv_path):
+    #     self.df = pd.read_csv(csv_path)
+    #     self.df = self.df[['id', 'title', 'overview', 'genres', 'keywords', 'tagline']].fillna('')
 
-        self.df['genres'] = self.df['genres'].apply(clean_json_list)
-        self.df['keywords'] = self.df['keywords'].apply(clean_json_list)
+    #     self.df['genres'] = self.df['genres'].apply(clean_json_list)
+    #     self.df['keywords'] = self.df['keywords'].apply(clean_json_list)
 
-        #THE ULTIMATE DATA ANALYSIS PROMPT
-        self.df['vibe_features'] = (
-            self.df['overview'] + " " + 
-            self.df['genres'] + " " + 
-            self.df['keywords'] + " " *2 + 
-            self.df['tagline'] *2
-        ).str.lower()
+    #     #THE ULTIMATE DATA ANALYSIS PROMPT
+    #     self.df['vibe_features'] = (
+    #         self.df['overview'] + " " + 
+    #         self.df['genres'] + " " + 
+    #         self.df['keywords'] + " " *2 + 
+    #         self.df['tagline'] *2
+    #     ).str.lower()
 
-        #print("encoding the Movie Vibes")
-        #self.embeddings = self.encoder.encode(self.df['vibe_features'].tolist(), show_progress_bar=True)
-        self.knn = NearestNeighbors(n_neighbors=6, metric='cosine')
-        self.knn.fit(self.embeddings)
-        self.df['genres'] = self.df['genres'].apply(clean_json_list)
-        self.df['keywords'] = self.df['keywords'].apply(clean_json_list)
-        self.df['vibe_features'] = self.df['overview'] + " " + self.df['genres'] + " " + self.df['keywords']
+    #     #print("encoding the Movie Vibes")
+    #     #self.embeddings = self.encoder.encode(self.df['vibe_features'].tolist(), show_progress_bar=True)
+    #     self.knn = NearestNeighbors(n_neighbors=6, metric='cosine')
+    #     self.knn.fit(self.embeddings)
+    #     self.df['genres'] = self.df['genres'].apply(clean_json_list)
+    #     self.df['keywords'] = self.df['keywords'].apply(clean_json_list)
+    #     self.df['vibe_features'] = self.df['overview'] + " " + self.df['genres'] + " " + self.df['keywords']
 
-        print("Diege Brain is ready.")
+    #     print("Diege Brain is ready.")
 
     def recommend(self, user_prompt):
         """Translates user text to math, compares it to the baked brain, and returns matches."""

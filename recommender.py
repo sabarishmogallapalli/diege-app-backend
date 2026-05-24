@@ -1,7 +1,14 @@
-import pandas as pd
+import os
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+
+import torch
+torch.set_num_threads(1)
+
 from sentence_transformers import SentenceTransformer
-from sklearn.neighbors import NearestNeighbors
+import pandas as pd
 import numpy as np
+from sklearn.neighbors import NearestNeighbors
 import ast
 from sklearn.metrics.pairwise import cosine_similarity
 

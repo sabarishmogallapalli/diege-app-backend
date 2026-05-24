@@ -23,99 +23,6 @@ class MovieRecommender:
         self.knn = NearestNeighbors(n_neighbors=6, metric='cosine')
         self.knn.fit(self.embeddings)
         print("Brain is ready.")
-        
-    def get_vibe_match(self, user_prompt):
-        if len(user_prompt) < 4:
-            return []
-        user_vector = self.encoder.encode([user_prompt])
-        distances, indices = self.knn.kneighbors(user_vector)
-        mood_map = {
-            "Epic": ["Action"],
-            "Spy": ["Action"],
-            "Disaster": ["Action"],
-            "Superhero": ["Action"],
-            "Thriller": ["Action"],
-            "Martial Arts": ["Action"],
-            "Video Game": ["Action"],
-            "Whodunnit": ["Crime"],
-            "Detective": ["Crime"],
-            "Gangster": ["Crime"],
-            "Hardboiled": ["Crime"],
-            "Courtroom": ["Crime"],
-            "Legal": ["Crime"],
-            "Contemporary Fantasy": ["Fantasy"],
-            "Urban Fantasy": ["Fantasy"],
-            "Dark Fantasy": ["Fantasy"],
-            "Fairy Tale": ["Fantasy"],
-            "Epic Fantasy": ["Fantasy"],
-            "Heroic Fantasy": ["Fantasy"],
-            "Sword and Sorcery": ["Fantasy"],
-            "Spaghetti Western": ["Western"],
-            "Epic Western": ["Western"],
-            "Outlaw Western": ["Western"],
-            "Marshal Western": ["Western"],
-            "Revisionist Western": ["Western"],
-            "Revenge Western": ["Western"],
-            "Empire Western": ["Western"],
-            "Biopic": ["History"],
-            "Historical Drama": ["History"],
-            "Biblical": ["History"],
-            "Period": ["History"],
-            "Alternate History": ["History"],
-            "Romantic Drama": ["Romance"],
-            "Rom-Com": ["Romance"],
-            "Chick Flick": ["Romance"],
-            "Romantic Thriller": ["Romance"],
-            "Traditional Animation": ["Animation"],
-            "Rotoscoping": ["Animation"],
-            "Puppet Animation": ["Animation"],
-            "Claymation": ["Animation"],
-            "Live Action/Animation": ["Animation"],
-            "Cutout Animation": ["Animation"],
-            "2D CGI Animation": ["Animation"],
-            "3D CGI Animation": ["Animation"],
-            "Slasher": ["Horror"],
-            "Splatter": ["Horror"],
-            "Psychological Horror": ["Horror"],
-            "Survival Horror": ["Horror"],
-            "Found Footage": ["Horror"],
-            "Paranormal/Occult Horror": ["Horror"],
-            "Monster": ["Horror"],
-            "Hard Sci-Fi": ["Science Fiction"],
-            "Apocalyptic Sci-Fi": ["Science Fiction"],
-            "Future Noir": ["Science Fiction"],
-            "Space Opera": ["Science Fiction"],
-            "Military Science Fiction": ["Science Fiction"],
-            "Punk Sci-Fi": ["Science Fiction"],
-            "Speculative Sci-Fi": ["Science Fiction"],
-        }
-        mood_keys = list(mood_map.keys())
-        mood_vectors = self.encoder.encode(mood_keys)
-        similarities = cosine_similarity(user_vector, mood_vectors)[0]
-        best_match_idx = np.argmax(similarities)
-        top_mood = mood_keys[best_match_idx]
-        target_genres = mood_map[top_mood]
-        results = []
-        threshold = 0.8
-        for dist, i in zip(distances[0], indices[0]):
-            movie = self.df.iloc[i]
-            movie_genres = movie['genres']
-
-            if ("reflective" in top_mood or "Fairy Tale" in top_mood) and "Horror" in movie_genres:
-                dist += 0.6
-            
-            if any(tg in movie_genres for tg in target_genres):
-                dist -= 0.1
-
-            if dist < threshold:
-                results.append({
-                    "id": int(movie['id']),
-                    "title": movie['title'],
-                    "overview": movie['overview'],
-                    "vibe_match": top_mood
-                    # "vibe_features": movie['vibe_features']
-                })
-        return results
     
     def load_data(self, csv_path):
         self.df = pd.read_csv(csv_path)
@@ -141,6 +48,32 @@ class MovieRecommender:
         self.df['vibe_features'] = self.df['overview'] + " " + self.df['genres'] + " " + self.df['keywords']
 
         print("Diege Brain is ready.")
+
+    def recommend(self, user_prompt):
+        """Translates user text to math, compares it to the baked brain, and returns matches."""
+        
+        # Encode strictly the single user sentence into a mathematical vector
+        user_vector = self.encoder.encode([user_prompt])
+        
+        # Search the pre-baked matrix for the 6 closest geometric matches
+        distances, indices = self.knn.kneighbors(user_vector)
+        
+        results = []
+        # Convert the raw index integers back into actual movie data
+        for i, idx in enumerate(indices[0]):
+            movie = self.df.iloc[idx]
+            
+            # Translate the cosine distance into a human-readable percentage score
+            match_score = 1 - distances[0][i]
+            
+            results.append({
+                "id": int(movie['id']),
+                "title": movie['title'],
+                "overview": movie['overview'],
+                "vibe_match": float(match_score)
+            })
+            
+        return results
 recommender = MovieRecommender()
 
 

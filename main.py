@@ -19,6 +19,7 @@ async def load_data():
 
 class VibeRequest(BaseModel):
     prompt: str
+    providers: list[int] = []
 
 @app.get("/")
 def health_check():
@@ -28,7 +29,7 @@ def health_check():
 async def get_recommendation(request: VibeRequest):
     try:
         results = rec.recommend(request.prompt)
-        return {"status": "success", "results": results}
+        return {"status": "success", "results": results["movies"], "low_confidence": results["low_confidence"]}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

@@ -1,4 +1,5 @@
 import os
+import re
 # 1. Throttle PyTorch to prevent RAM spikes on the Render Free Tier
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
@@ -16,12 +17,33 @@ class MovieRecommender:
         print("Diege is waking up...")
         # Load the lightweight model ONLY for reading the user's live text prompt
         self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
+        self.BOUTIQUE_BOOSTS = {
+            "cinematography": 3,
+            "sweeping": 2,
+            "slow-burn": 3,
+            "nostalgia": 2,
+            "nostalgic": 2,
+            "melancholic": 2,
+            "aesthetic": 3,
+            "atmospheric": 2,
+            "vibe": 2,
+            "dialogue-driven": 3,
+            "dialogue": 2
+        }
 
     def load_data(self, csv_path):
         print("Loading movie metadata...")
         # Load the movie dataset strictly to retrieve titles and IDs
         self.df = pd.read_csv(csv_path)
         self.df = self.df[['id', 'title', 'overview', 'genres', 'keywords', 'tagline']].fillna('')
+
+        if 'providers' not in self.df.columns:
+            # For phase 1, mock the column arrays if they are completely missing from the CSV
+            import random
+            available_ids = [8, 9, 1899, 350] # Matches your frontend choices
+            self.df['providers'] = [
+                random.sample(available_ids, k=random.randint(1, 2)) for _ in range(len(self.df))
+            ]
 
         # 2. THE SILVER BULLET: Load the pre-calculated math instantly
         print("Loading baked brain matrix...")
@@ -60,7 +82,7 @@ class MovieRecommender:
         # Encode strictly the single user sentence into a mathematical vector
         cleaned_prompt = self._clean_negations(user_prompt)
         weighted_prompt = self._apply_vibe_weights(cleaned_prompt)
-        user_vector = self.encoder.encode([user_prompt])
+        user_vector = self.encoder.encode([weighted_prompt])
         
         # Search the pre-baked matrix for the 6 closest geometric matches
         #distances, indices = self.knn.kneighbors(user_vector)

@@ -28,7 +28,7 @@ def health_check():
 @app.post("/recommend")
 async def get_recommendation(request: VibeRequest):
     try:
-        results = rec.recommend(request.prompt)
+        results = rec.recommend(request.prompt, request.providers)
         return {"status": "success", "results": results["movies"], "low_confidence": results["low_confidence"]}
     except Exception as e:
         return {"status": "error", "message": str(e)}
